@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/supabase/admin"
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createClient()
 
@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "No tienes permisos de administrador" }, { status: 403 })
     }
 
-    const userId = params.id
+    const { id: userId } = await params
 
     // Prevent admin from suspending themselves
     if (userId === user.id) {

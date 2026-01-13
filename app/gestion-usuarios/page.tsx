@@ -16,6 +16,7 @@ import {
   Filter,
   UserX,
   UserCheck,
+  ArrowLeft,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -310,9 +311,14 @@ export default function GestionUsuariosPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
-            <p className="text-secondary-text mt-1">Administra los usuarios del sistema</p>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.push("/dashboard")} title="Volver al dashboard">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
+              <p className="text-secondary-text mt-1">Administra los usuarios del sistema</p>
+            </div>
           </div>
 
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
