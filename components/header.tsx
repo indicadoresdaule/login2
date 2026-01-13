@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef, memo, useCallback } from "react"
 import Link from "next/link"
-import { Menu, X, LogOut, ChevronDown, Settings, Shield } from "lucide-react"
+import { Menu, X, LogOut, ChevronDown, UserIcon, Settings } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
 import { useUser } from "@/hooks/use-user"
@@ -55,9 +55,10 @@ export function Header() {
   const [forceUpdate, setForceUpdate] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
-  const { user, profile, loading } = useUser()
+  const { user, loading } = useUser()
   const supabase = createClient()
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const currentUser = user // Assuming user object contains profile information
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,14 +73,16 @@ export function Header() {
   const handleLogout = useCallback(async () => {
     try {
       setIsLoggingOut(true)
-      localStorage.removeItem("cached_user")
-      localStorage.removeItem("cached_profile")
       await supabase.auth.signOut()
 
+      // Cerrar menús
       setShowUserMenu(false)
       setIsOpen(false)
 
+      // Forzar recarga completa de la página
       window.location.href = "/"
+
+      // También hacer refresh del router como respaldo
       router.refresh()
     } catch (error) {
       console.error("Error al cerrar sesión:", error)
@@ -137,23 +140,13 @@ export function Header() {
   }, [supabase.auth, router])
 
   // Usar useMemo para cálculos que no cambian frecuentemente
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Usuario"
+  const displayName = user?.email?.split("@")[0] || "Usuario"
   const initials = displayName
     .split(" ")
     .map((word) => word[0])
     .join("")
     .toUpperCase()
     .slice(0, 2)
-
-  const getRoleName = (role: string | undefined) => {
-    if (!role) return ""
-    const roles: Record<string, string> = {
-      admin: "Administrador",
-      tecnico: "Técnico",
-      normal: "Usuario",
-    }
-    return roles[role] || role
-  }
 
   // Cerrar menús al cambiar de ruta
   useEffect(() => {
@@ -221,108 +214,72 @@ export function Header() {
           {/* Sección Usuario */}
           <div className="flex items-center gap-2">
             {loading ? (
+              // Skeleton más rápido y estático
               <div className="flex items-center gap-2">
                 <div className="hidden lg:flex items-center gap-2">
-                  <div className="w-24 h-4 bg-secondary-bg rounded animate-pulse" />
-                  <div className="w-8 h-8 rounded-full bg-secondary-bg animate-pulse" />
+                  <div className="w-24 h-4 bg-secondary-bg rounded" />
+                  <div className="w-8 h-8 rounded-full bg-secondary-bg" />
                 </div>
-                <div className="lg:hidden w-8 h-8 rounded-full bg-secondary-bg animate-pulse" />
+                <div className="lg:hidden w-8 h-8 rounded-full bg-secondary-bg" />
               </div>
             ) : user ? (
               <div className="relative" ref={userMenuRef}>
-                {/* Desktop - Usuario con nombre y rol */}
+                {/* Desktop - Usuario completo */}
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="hidden lg:flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-md hover:bg-secondary-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-expanded={showUserMenu}
                   disabled={isLoggingOut}
                 >
                   <div className="text-right">
-                    <span className="text-sm font-semibold text-foreground block">{displayName}</span>
-                    {profile?.role && (
-                      <span className="text-xs text-secondary-text flex items-center gap-1.5 justify-end">
-                        <Shield className="w-3 h-3" />
-                        {getRoleName(profile.role)}
-                      </span>
-                    )}
+                    <span className="text-sm font-medium text-foreground block">{displayName}</span>
+                    <span className="text-xs text-secondary-text truncate max-w-[180px] block">{user.email}</span>
                   </div>
                   <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold">
                       {initials}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
                   </div>
                   <ChevronDown
                     className={`w-4 h-4 text-secondary-text transition-transform ${showUserMenu ? "rotate-180" : ""}`}
                   />
                 </button>
 
-                {/* Mobile - Solo avatar con indicador de rol */}
+                {/* Mobile - Solo avatar */}
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="lg:hidden flex items-center gap-2 p-1.5 rounded-md hover:bg-secondary-bg disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoggingOut}
                 >
-                  <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                      {initials}
-                    </div>
-                    {profile?.role === "admin" && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-purple-500 rounded-full border-2 border-background flex items-center justify-center">
-                        <Shield className="w-2.5 h-2.5 text-white" />
-                      </div>
-                    )}
-                    {profile?.role === "tecnico" && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full border-2 border-background" />
-                    )}
-                    {(!profile?.role || profile?.role === "normal") && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-                    )}
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold">
+                    {initials}
                   </div>
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu - Solo Configuración y Cerrar Sesión */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-xl py-1 animate-in fade-in slide-in-from-top-2 z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-semibold text-foreground">{displayName}</p>
-                      <p className="text-xs text-secondary-text mt-0.5 truncate">{user.email}</p>
-                      {profile?.role && (
-                        <span
-                          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md mt-2 ${
-                            profile.role === "admin"
-                              ? "bg-purple-100 text-purple-700"
-                              : profile.role === "tecnico"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          <Shield className="w-3 h-3" />
-                          {getRoleName(profile.role)}
-                        </span>
-                      )}
-                    </div>
-
+                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg py-2 animate-in fade-in slide-in-from-top-2 z-50">
                     <div className="py-1">
-                      {profile?.role === "admin" && (
-                        <CustomLink
-                          href="/admin"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary-bg transition-colors"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Shield className="w-4 h-4 text-purple-600" />
-                          <span>Panel de Administración</span>
-                        </CustomLink>
-                      )}
                       <CustomLink
-                        href="/configuracion"
+                        href="/perfil"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary-bg transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <Settings className="w-4 h-4" />
-                        Configuración
+                        <UserIcon className="w-4 h-4" />
+                        Mi Perfil
                       </CustomLink>
-                      <div className="border-t border-border my-1" />
+                      {currentUser?.profile?.role === "admin" && (
+                        <CustomLink
+                          href="/gestion-usuarios"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary-bg transition-colors"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Gestión de Usuarios
+                        </CustomLink>
+                      )}
+                      <div className="my-1 border-t border-border" />
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -382,56 +339,35 @@ export function Header() {
                   <>
                     <div className="px-3 py-3 bg-secondary-bg/50 rounded-lg mb-2">
                       <div className="flex items-center gap-3">
-                        <div className="relative flex-shrink-0">
-                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-sm">
-                            {initials}
-                          </div>
-                          {profile?.role === "admin" && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-purple-500 rounded-full border-2 border-background flex items-center justify-center">
-                              <Shield className="w-2.5 h-2.5 text-white" />
-                            </div>
-                          )}
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                          {initials}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                          <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
                           <p className="text-xs text-secondary-text truncate">{user.email}</p>
-                          {profile?.role && (
-                            <span
-                              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md mt-1.5 ${
-                                profile.role === "admin"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : profile.role === "tecnico"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-gray-100 text-gray-700"
-                              }`}
-                            >
-                              <Shield className="w-3 h-3" />
-                              {getRoleName(profile.role)}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    {profile?.role === "admin" && (
-                      <CustomLink
-                        href="/admin"
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary-bg rounded-md transition-colors mb-1"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <Shield className="w-5 h-5 text-purple-600" />
-                        Panel de Administración
-                      </CustomLink>
-                    )}
-
                     <CustomLink
-                      href="/configuracion"
+                      href="/perfil"
                       className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary-bg rounded-md transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
-                      <Settings className="w-5 h-5" />
-                      Configuración
+                      <UserIcon className="w-5 h-5" />
+                      Mi Perfil
                     </CustomLink>
+
+                    {currentUser?.profile?.role === "admin" && (
+                      <CustomLink
+                        href="/gestion-usuarios"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary-bg rounded-md transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="w-5 h-5" />
+                        Gestión de Usuarios
+                      </CustomLink>
+                    )}
 
                     <button
                       onClick={handleLogout}
