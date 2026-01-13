@@ -209,7 +209,7 @@ export default function PerfilPage() {
 
             <div className="pt-6 border-t border-border flex flex-col sm:flex-row gap-3">
               {profile.role === "admin" && (
-                <Button onClick={() => router.push("/admin")} className="flex-1" variant="outline">
+                <Button onClick={() => router.push("/gestion-usuarios")} className="flex-1" variant="outline">
                   <Shield className="w-4 h-4 mr-2" />
                   Panel de Administración
                 </Button>
