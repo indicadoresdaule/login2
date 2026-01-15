@@ -1,9 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import AccessDeniedAlert from "@/components/AccessDeniedAlert"
+
+// Componente para usar searchParams de forma segura
+function useSearchParamsWrapper() {
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSearchParams(new URLSearchParams(window.location.search))
+    }
+  }, [])
+  
+  return searchParams
+}
 
 export default function ClientLayout({
   children,
@@ -15,7 +28,7 @@ export default function ClientLayout({
   const [userRole, setUserRole] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParamsWrapper()
 
   // Inicializar Supabase cliente
   const supabase = createBrowserClient(
@@ -26,22 +39,26 @@ export default function ClientLayout({
   // Verificar acceso en el cliente
   useEffect(() => {
     const checkAccess = async () => {
-      // Verificar si hay alerta de acceso denegado en los headers
-      const hasAccessDeniedHeader = document.cookie.includes("access_denied=true")
+      // Verificar si hay alerta de acceso denegado en localStorage
+      const accessDenied = localStorage.getItem("access_denied")
+      const accessDeniedReason = localStorage.getItem("access_denied_reason")
       
-      if (hasAccessDeniedHeader) {
-        // Limpiar la cookie
-        document.cookie = "access_denied=; path=/; max-age=0"
-        setAccessDeniedReason("No tienes permisos para acceder a esta página")
+      if (accessDenied === "true" && accessDeniedReason) {
+        setAccessDeniedReason(accessDeniedReason)
         setShowAccessDenied(true)
+        localStorage.removeItem("access_denied")
+        localStorage.removeItem("access_denied_reason")
       }
 
       // Verificar redirección desde login
-      const redirectedFrom = searchParams.get("redirectedFrom")
-      if (redirectedFrom) {
-        const newSearchParams = new URLSearchParams(searchParams.toString())
-        newSearchParams.delete("redirectedFrom")
-        router.replace(`${pathname}?${newSearchParams.toString()}`)
+      if (searchParams) {
+        const redirectedFrom = searchParams.get("redirect")
+        if (redirectedFrom) {
+          // Limpiar el parámetro de la URL sin recargar
+          const newUrl = new URL(window.location.href)
+          newUrl.searchParams.delete("redirect")
+          window.history.replaceState({}, "", newUrl.toString())
+        }
       }
 
       // Obtener rol del usuario
@@ -61,9 +78,11 @@ export default function ClientLayout({
       // Verificar permisos según la ruta actual
       if (userRole) {
         // Rutas de reportes: solo admin, docente, tecnico
-        if (pathname.startsWith("/reportes") && ["estudiante"].includes(userRole)) {
+        if (pathname.startsWith("/reportes") && userRole === "estudiante") {
           setAccessDeniedReason("Los estudiantes no tienen acceso a los reportes")
           setShowAccessDenied(true)
+          localStorage.setItem("access_denied", "true")
+          localStorage.setItem("access_denied_reason", "Los estudiantes no tienen acceso a los reportes")
           router.replace("/")
           return
         }
@@ -72,6 +91,8 @@ export default function ClientLayout({
         if ((pathname.startsWith("/admin") || pathname.startsWith("/gestion-usuarios")) && userRole !== "admin") {
           setAccessDeniedReason("Solo los administradores pueden acceder a esta sección")
           setShowAccessDenied(true)
+          localStorage.setItem("access_denied", "true")
+          localStorage.setItem("access_denied_reason", "Solo los administradores pueden acceder a esta sección")
           router.replace("/")
           return
         }
@@ -80,6 +101,8 @@ export default function ClientLayout({
         if (pathname.startsWith("/formularios") && !userRole) {
           setAccessDeniedReason("Debes iniciar sesión para acceder a los formularios")
           setShowAccessDenied(true)
+          localStorage.setItem("access_denied", "true")
+          localStorage.setItem("access_denied_reason", "Debes iniciar sesión para acceder a los formularios")
           router.replace("/login")
           return
         }
@@ -100,6 +123,8 @@ export default function ClientLayout({
         if (requiresAuth && !isLoginPage) {
           setAccessDeniedReason("Debes iniciar sesión para acceder a esta página")
           setShowAccessDenied(true)
+          localStorage.setItem("access_denied", "true")
+          localStorage.setItem("access_denied_reason", "Debes iniciar sesión para acceder a esta página")
           router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
           return
         }
