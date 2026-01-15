@@ -76,6 +76,12 @@ export default function Home() {
                 descripcion="Participa directamente en nuestras encuestas y aporta datos valiosos para mejorar políticas."
                 color="accent3"
               />
+              <CardNavegacion
+                href="/integrantes"
+                titulo="Nuestro Equipo"
+                descripcion="Conoce a los integrantes responsables de la gestión ambiental en el cantón Daule."
+                color="primary"
+              />
             </div>
           </div>
         </section>

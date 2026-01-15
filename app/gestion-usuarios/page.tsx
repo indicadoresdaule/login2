@@ -312,7 +312,7 @@ export default function GestionUsuariosPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => router.push("/perfil")} title="Volver al dashboard">
+            <Button variant="outline" size="icon" onClick={() => router.push("/dashboard")} title="Volver al dashboard">
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
