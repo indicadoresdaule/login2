@@ -34,16 +34,16 @@ export async function updateSession(request: NextRequest) {
   // Definir rutas y sus permisos
   const routes = {
     // Rutas públicas (no requieren autenticación)
-    public: ["/", "/login", "/metas", "/acerca-de"],
+    public: ["/", "/login", "/metas", "/acerca-de", "/404"],
     
     // Rutas que requieren autenticación pero cualquier rol
     authenticated: ["/perfil", "/avances", "/formularios"],
     
     // Rutas solo para admin, docente, tecnico (NO estudiantes)
-    reportes: ["/reportes", "/reportes/"],
+    reportes: ["/reportes"],
     
     // Rutas solo para administradores
-    admin: ["/admin", "/admin/", "/gestion-usuarios"],
+    admin: ["/admin", "/gestion-usuarios"],
   }
 
   const currentPath = request.nextUrl.pathname
@@ -101,20 +101,22 @@ export async function updateSession(request: NextRequest) {
     if (isReportesRoute) {
       const allowedRoles = ["admin", "docente", "tecnico"]
       if (!userRole || !allowedRoles.includes(userRole)) {
-        // En lugar de redirigir, pasamos un header para mostrar alerta
-        const response = NextResponse.redirect(new URL("/", request.url))
-        response.headers.set("X-Access-Denied", "true")
-        response.headers.set("X-Access-Denied-Reason", "Acceso restringido a estudiantes")
-        return response
+        const url = request.nextUrl.clone()
+        url.pathname = "/"
+        // Agregamos parámetros para mostrar alerta en el cliente
+        url.searchParams.set("access_denied", "true")
+        url.searchParams.set("reason", "Acceso restringido a estudiantes")
+        return NextResponse.redirect(url)
       }
     }
 
     // Verificar acceso a rutas de admin
     if (isAdminRoute && userRole !== "admin") {
-      const response = NextResponse.redirect(new URL("/", request.url))
-      response.headers.set("X-Access-Denied", "true")
-      response.headers.set("X-Access-Denied-Reason", "Solo administradores pueden acceder")
-      return response
+      const url = request.nextUrl.clone()
+      url.pathname = "/"
+      url.searchParams.set("access_denied", "true")
+      url.searchParams.set("reason", "Solo administradores pueden acceder")
+      return NextResponse.redirect(url)
     }
   }
 
