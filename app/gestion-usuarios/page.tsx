@@ -43,7 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-type UserRole = "admin" | "tecnico" | "normal"
+type UserRole = "admin" | "docente" | "tecnico" | "estudiante"
 
 interface UserProfile {
   id: string
@@ -74,13 +74,13 @@ export default function GestionUsuariosPage() {
   // Create user states
   const [createEmail, setCreateEmail] = useState("")
   const [createPassword, setCreatePassword] = useState("")
-  const [createRole, setCreateRole] = useState<UserRole>("normal")
+  const [createRole, setCreateRole] = useState<UserRole>("estudiante")
   const [creating, setCreating] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
 
   // Edit user states
   const [editUser, setEditUser] = useState<UserData | null>(null)
-  const [editRole, setEditRole] = useState<UserRole>("normal")
+  const [editRole, setEditRole] = useState<UserRole>("estudiante")
   const [editEmail, setEditEmail] = useState("")
   const [editOpen, setEditOpen] = useState(false)
 
@@ -170,7 +170,7 @@ export default function GestionUsuariosPage() {
         setMessage({ type: "success", text: "Usuario creado correctamente" })
         setCreateEmail("")
         setCreatePassword("")
-        setCreateRole("normal")
+        setCreateRole("estudiante")
         setCreateOpen(false)
         loadUsers()
       } else {
@@ -266,6 +266,8 @@ export default function GestionUsuariosPage() {
     switch (role) {
       case "admin":
         return <Shield className="w-4 h-4" />
+      case "docente":
+        return <User className="w-4 h-4" />
       case "tecnico":
         return <Wrench className="w-4 h-4" />
       default:
@@ -276,14 +278,16 @@ export default function GestionUsuariosPage() {
   const getRoleBadge = (role: UserRole) => {
     const colors = {
       admin: "bg-red-500/10 text-red-500 border-red-500/20",
+      docente: "bg-purple-500/10 text-purple-500 border-purple-500/20",
       tecnico: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      normal: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+      estudiante: "bg-gray-500/10 text-gray-500 border-gray-500/20",
     }
 
     const labels = {
       admin: "Administrador",
+      docente: "Docente",
       tecnico: "Técnico",
-      normal: "Normal",
+      estudiante: "Estudiante",
     }
 
     return (
@@ -361,7 +365,8 @@ export default function GestionUsuariosPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="estudiante">Estudiante</SelectItem>
+                      <SelectItem value="docente">Docente</SelectItem>
                       <SelectItem value="tecnico">Técnico</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                     </SelectContent>
@@ -429,8 +434,9 @@ export default function GestionUsuariosPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos los roles</SelectItem>
                   <SelectItem value="admin">Administradores</SelectItem>
+                  <SelectItem value="docente">Docentes</SelectItem>
                   <SelectItem value="tecnico">Técnicos</SelectItem>
-                  <SelectItem value="normal">Normales</SelectItem>
+                  <SelectItem value="estudiante">Estudiantes</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -504,7 +510,7 @@ export default function GestionUsuariosPage() {
                             size="sm"
                             onClick={() => {
                               setEditUser(user)
-                              setEditRole(user.profile?.role || "normal")
+                              setEditRole(user.profile?.role || "estudiante")
                               setEditEmail(user.email)
                               setEditOpen(true)
                             }}
@@ -567,7 +573,8 @@ export default function GestionUsuariosPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="estudiante">Estudiante</SelectItem>
+                  <SelectItem value="docente">Docente</SelectItem>
                   <SelectItem value="tecnico">Técnico</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
