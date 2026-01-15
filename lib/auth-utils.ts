@@ -16,7 +16,11 @@ export async function getUserRole(): Promise<UserRole | null> {
 
   if (!user) return null
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single()
 
   return profile?.role as UserRole | null
 }
@@ -38,7 +42,7 @@ export async function isAdmin(): Promise<boolean> {
   return hasRole("admin")
 }
 
-// Función para verificar acceso a reportes
+// Función para verificar acceso a reportes (SOLO admin, docente, tecnico)
 export async function canAccessReportes(): Promise<boolean> {
   return hasAnyRole(["admin", "docente", "tecnico"])
 }
@@ -46,5 +50,10 @@ export async function canAccessReportes(): Promise<boolean> {
 // Función para verificar acceso a formularios (todos los usuarios autenticados)
 export async function canAccessFormularios(): Promise<boolean> {
   const role = await getUserRole()
-  return role !== null
+  return role !== null // Cualquier usuario autenticado
+}
+
+// Función para verificar acceso público (metas)
+export async function canAccessMetas(): Promise<boolean> {
+  return true // Siempre accesible
 }
