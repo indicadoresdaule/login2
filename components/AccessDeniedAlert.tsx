@@ -19,7 +19,7 @@ export default function AccessDeniedAlert({ message, onClose }: AccessDeniedAler
   }, [onClose])
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-md">
+    <div className="fixed top-4 right-4 z-50 max-w-md animate-in slide-in-from-top-5 duration-300">
       <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
