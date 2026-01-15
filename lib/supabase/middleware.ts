@@ -1,94 +1,25 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-// Función para crear una respuesta con script de alerta flotante
-function createFloatingAlertResponse(message: string, isLoginAlert: boolean = false) {
+// Función para crear script que muestra alerta y redirige
+function createAlertAndRedirectScript(message: string, redirectUrl: string) {
   const html = `
     <!DOCTYPE html>
     <html>
       <head>
         <script>
-          // Función para mostrar alerta flotante
-          function showFloatingAlert(message, isLoginAlert) {
-            // Crear elemento de alerta
-            const alertDiv = document.createElement('div');
-            alertDiv.id = 'floating-alert';
-            alertDiv.innerHTML = \`
-              <div style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: \${isLoginAlert ? '#e74c3c' : '#f39c12'};
-                color: white;
-                padding: 1rem;
-                text-align: center;
-                z-index: 9999;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              ">
-                <span style="flex: 1; font-weight: 500;">\${message}</span>
-                <div>
-                  \${isLoginAlert ? 
-                    '<button onclick="redirectToLogin()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 0.5rem 1rem; border-radius: 4px; margin-right: 1rem; cursor: pointer;">Iniciar sesión</button>' : 
-                    ''
-                  }
-                  <button onclick="closeAlert()" style="background: rgba(0,0,0,0.2); border: none; color: white; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">× Cerrar</button>
-                </div>
-              </div>
-            \`;
-            
-            // Añadir al cuerpo
-            document.body.appendChild(alertDiv);
-            
-            // Añadir padding al body para que el contenido no quede oculto
-            document.body.style.paddingTop = '60px';
-            
-            // Mostrar alerta de navegador también
-            setTimeout(() => alert(message), 100);
-          }
+          // Mostrar alerta
+          alert("${message.replace(/"/g, '\\"')}");
           
-          function redirectToLogin() {
-            window.location.href = '/login?redirectedFrom=' + encodeURIComponent(window.location.pathname);
-          }
-          
-          function closeAlert() {
-            const alertDiv = document.getElementById('floating-alert');
-            if (alertDiv) {
-              alertDiv.remove();
-              document.body.style.paddingTop = '';
-            }
-          }
-          
-          // Mostrar alerta cuando se cargue la página
-          window.onload = function() {
-            showFloatingAlert("${message.replace(/"/g, '\\"')}", ${isLoginAlert});
-            
-            // También redirigir automáticamente después de 5 segundos si es alerta de login
-            if (${isLoginAlert}) {
-              setTimeout(() => {
-                if (document.getElementById('floating-alert')) {
-                  redirectToLogin();
-                }
-              }, 5000);
-            }
-          };
+          // Redirigir después de cerrar la alerta
+          window.location.href = "${redirectUrl}";
         </script>
       </head>
       <body>
-        <div style="padding: 2rem; text-align: center;">
-          <div style="font-size: 5rem; margin-bottom: 1rem; color: #ccc;">🔒</div>
-          <h1 style="color: #333;">${isLoginAlert ? 'Acceso restringido' : 'Acceso denegado'}</h1>
-          <p style="color: #666;">${message}</p>
-          <div style="margin-top: 2rem;">
-            <button onclick="window.history.back()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-right: 1rem;">
-              Volver atrás
-            </button>
-            <button onclick="window.location.href='/'" style="background: #95a5a6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-size: 1rem; cursor: pointer;">
-              Ir al inicio
-            </button>
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+          <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+            <p>Redirigiendo...</p>
           </div>
         </div>
       </body>
@@ -96,10 +27,8 @@ function createFloatingAlertResponse(message: string, isLoginAlert: boolean = fa
   `;
   
   return new Response(html, {
-    status: isLoginAlert ? 401 : 403,
-    headers: {
-      'Content-Type': 'text/html',
-    },
+    status: 403,
+    headers: { 'Content-Type': 'text/html' },
   });
 }
 
@@ -129,18 +58,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refresh session if expired
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Definir rutas
   const reportesRoute = "/reportes";
   const formulariosRoute = "/formularios";
   const metasRoute = "/metas";
   const adminRoutes = ["/admin", "/gestion-usuarios"];
-  
-  // Rutas que requieren autenticación básica
   const authRoutes = ["/perfil", "/avances", ...adminRoutes];
 
   const isReportesRoute = request.nextUrl.pathname.startsWith(reportesRoute);
@@ -149,22 +73,21 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
 
-  // Las metas son públicas - no requieren autenticación
+  // Las metas son públicas
   if (isMetasRoute) {
     return supabaseResponse;
   }
 
-  // Verificar autenticación para rutas que la requieren
+  // Verificar autenticación
   if ((isAuthRoute || isReportesRoute || isFormulariosRoute) && !user) {
-    return createFloatingAlertResponse(
+    return createAlertAndRedirectScript(
       "Debes iniciar sesión para acceder a esta página.",
-      true
+      `/login?redirectedFrom=${encodeURIComponent(request.nextUrl.pathname)}`
     );
   }
 
-  // Si el usuario está autenticado, verificar roles específicos
+  // Verificar roles si el usuario está autenticado
   if (user) {
-    // Obtener el perfil del usuario para verificar su rol
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -173,31 +96,29 @@ export async function updateSession(request: NextRequest) {
 
     const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null;
 
-    // Verificar acceso a reportes (SOLO admin, docente, tecnico - NO estudiantes)
+    // Verificar acceso a reportes (NO estudiantes)
     if (isReportesRoute && userRole) {
       const allowedRoles = ["admin", "docente", "tecnico"];
       if (!allowedRoles.includes(userRole)) {
-        return createFloatingAlertResponse(
-          "Acceso denegado. Solo administradores, docentes y técnicos pueden acceder a los reportes.",
-          false
+        return createAlertAndRedirectScript(
+          "Solo administradores, docentes y técnicos pueden acceder a los reportes.",
+          "/"
         );
       }
     }
 
-    // Verificar acceso a rutas de admin (SOLO administradores)
+    // Verificar acceso a admin (SOLO administradores)
     if (isAdminRoute && userRole !== "admin") {
-      return createFloatingAlertResponse(
-        "Acceso denegado. Solo los administradores pueden acceder a esta sección.",
-        false
+      return createAlertAndRedirectScript(
+        "Solo los administradores pueden acceder a esta sección.",
+        "/"
       );
     }
   }
 
-  // Redirect logged-in users away from login
+  // Redirigir usuarios autenticados desde login
   if (request.nextUrl.pathname === "/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return supabaseResponse;
