@@ -213,34 +213,6 @@ export default function PerfilPage() {
               </div>
             )}
 
-            {profile.role === "docente" && (
-              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <User className="w-6 h-6 text-purple-500" />
-                  <div>
-                    <p className="font-semibold text-purple-600">Permisos de Docente</p>
-                    <p className="text-sm text-purple-600/80 mt-0.5">
-                      Tienes acceso al panel docente para gestionar cursos y estudiantes
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {profile.role === "estudiante" && (
-              <div className="p-4 bg-gray-500/10 border border-gray-500/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <User className="w-6 h-6 text-gray-500" />
-                  <div>
-                    <p className="font-semibold text-gray-600">Permisos de Estudiante</p>
-                    <p className="text-sm text-gray-600/80 mt-0.5">
-                      Tienes acceso a los cursos y recursos asignados
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="pt-6 border-t border-border flex flex-col sm:flex-row gap-3">
               {profile.role === "admin" && (
                 <Button onClick={() => router.push("/gestion-usuarios")} className="flex-1" variant="outline">
