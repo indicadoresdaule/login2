@@ -27,86 +27,95 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Refresh session if expired
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Rutas que requieren autenticación pero no verificación de rol específico
-  const authRoutes = ["/perfil", "/avances"]
-  
-  // Reportes: SOLO administradores, docentes, tecnicos
-  const reportesRoute = "/reportes"
-  
-  // Formularios: administradores, docentes, tecnicos, estudiantes (todos autenticados)
-  const formulariosRoute = "/formularios"
-  
-  // Metas: público para todos (no requiere autenticación)
-  const metasRoute = "/metas"
-  
-  // Admin routes
-  const adminRoutes = ["/admin", "/gestion-usuarios"]
+  // Definir rutas y sus permisos
+  const routes = {
+    // Rutas públicas (no requieren autenticación)
+    public: ["/", "/login", "/metas", "/acerca-de"],
+    
+    // Rutas que requieren autenticación pero cualquier rol
+    authenticated: ["/perfil", "/avances", "/formularios"],
+    
+    // Rutas solo para admin, docente, tecnico (NO estudiantes)
+    reportes: ["/reportes", "/reportes/"],
+    
+    // Rutas solo para administradores
+    admin: ["/admin", "/admin/", "/gestion-usuarios"],
+  }
 
-  const isAuthRoute = authRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
-  const isReportesRoute = request.nextUrl.pathname.startsWith(reportesRoute)
-  const isFormulariosRoute = request.nextUrl.pathname.startsWith(formulariosRoute)
-  const isMetasRoute = request.nextUrl.pathname.startsWith(metasRoute)
-  const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
+  const currentPath = request.nextUrl.pathname
 
-  // Las metas son públicas - no requieren autenticación
-  if (isMetasRoute) {
+  // Verificar si la ruta es pública
+  const isPublicRoute = routes.public.some(route => 
+    currentPath === route || currentPath.startsWith(route + "/")
+  )
+
+  // Verificar si es ruta de reportes
+  const isReportesRoute = routes.reportes.some(route => 
+    currentPath.startsWith(route)
+  )
+
+  // Verificar si es ruta de admin
+  const isAdminRoute = routes.admin.some(route => 
+    currentPath.startsWith(route)
+  )
+
+  // Verificar si es ruta que requiere autenticación
+  const isAuthenticatedRoute = routes.authenticated.some(route => 
+    currentPath.startsWith(route)
+  )
+
+  // Si es ruta pública, permitir acceso
+  if (isPublicRoute) {
+    // Redirigir usuarios logueados desde login a home
+    if (currentPath === "/login" && user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/"
+      return NextResponse.redirect(url)
+    }
     return supabaseResponse
   }
 
-  // Verificar autenticación para rutas que la requieren
-  if ((isAuthRoute || isReportesRoute || isFormulariosRoute || isAdminRoute) && !user) {
+  // Si requiere autenticación y no hay usuario, redirigir a login
+  if ((isAuthenticatedRoute || isReportesRoute || isAdminRoute) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
-    url.searchParams.set("redirectedFrom", request.nextUrl.pathname)
+    url.searchParams.set("redirect", currentPath)
     return NextResponse.redirect(url)
   }
 
-  // Si el usuario está autenticado, verificar roles específicos
+  // Si hay usuario, verificar permisos específicos
   if (user) {
-    // Obtener el perfil del usuario para verificar su rol
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single()
 
-    const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null
+    const userRole = profile?.role
 
-    // Verificar acceso a reportes (SOLO admin, docente, tecnico - NO estudiantes)
-    if (isReportesRoute && userRole) {
+    // Verificar acceso a reportes (NO estudiantes)
+    if (isReportesRoute) {
       const allowedRoles = ["admin", "docente", "tecnico"]
-      if (!allowedRoles.includes(userRole)) {
-        const url = request.nextUrl.clone()
-        url.pathname = "/acceso-denegado"
-        return NextResponse.redirect(url)
+      if (!userRole || !allowedRoles.includes(userRole)) {
+        // En lugar de redirigir, pasamos un header para mostrar alerta
+        const response = NextResponse.redirect(new URL("/", request.url))
+        response.headers.set("X-Access-Denied", "true")
+        response.headers.set("X-Access-Denied-Reason", "Acceso restringido a estudiantes")
+        return response
       }
     }
 
-    // Verificar acceso a formularios (todos los usuarios autenticados)
-    if (isFormulariosRoute && !userRole) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/acceso-denegado"
-      return NextResponse.redirect(url)
-    }
-
-    // Verificar acceso a rutas de admin (SOLO administradores)
+    // Verificar acceso a rutas de admin
     if (isAdminRoute && userRole !== "admin") {
-      const url = request.nextUrl.clone()
-      url.pathname = "/acceso-denegado"
-      return NextResponse.redirect(url)
+      const response = NextResponse.redirect(new URL("/", request.url))
+      response.headers.set("X-Access-Denied", "true")
+      response.headers.set("X-Access-Denied-Reason", "Solo administradores pueden acceder")
+      return response
     }
-  }
-
-  // Redirect logged-in users away from login
-  if (request.nextUrl.pathname === "/login" && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
-    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
