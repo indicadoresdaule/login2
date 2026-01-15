@@ -1,9 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr"
 
-// Tipo para los roles
 export type UserRole = "admin" | "docente" | "tecnico" | "estudiante"
 
-// Función para obtener el rol del usuario actual
 export async function getUserRole(): Promise<UserRole | null> {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,35 +23,82 @@ export async function getUserRole(): Promise<UserRole | null> {
   return profile?.role as UserRole | null
 }
 
-// Función para verificar si el usuario tiene un rol específico
-export async function hasRole(requiredRole: UserRole): Promise<boolean> {
-  const role = await getUserRole()
-  return role === requiredRole
-}
-
-// Función para verificar si el usuario tiene alguno de los roles permitidos
-export async function hasAnyRole(allowedRoles: UserRole[]): Promise<boolean> {
-  const role = await getUserRole()
-  return role ? allowedRoles.includes(role) : false
-}
-
-// Función para verificar si el usuario es administrador
-export async function isAdmin(): Promise<boolean> {
-  return hasRole("admin")
-}
-
-// Función para verificar acceso a reportes (SOLO admin, docente, tecnico)
+// Verificar acceso a reportes (admin, docente, tecnico - NO estudiantes)
 export async function canAccessReportes(): Promise<boolean> {
-  return hasAnyRole(["admin", "docente", "tecnico"])
+  const role = await getUserRole()
+  if (!role) return false
+  return ["admin", "docente", "tecnico"].includes(role)
 }
 
-// Función para verificar acceso a formularios (todos los usuarios autenticados)
+// Verificar acceso a formularios (todos los usuarios autenticados)
 export async function canAccessFormularios(): Promise<boolean> {
   const role = await getUserRole()
-  return role !== null // Cualquier usuario autenticado
+  return role !== null
 }
 
-// Función para verificar acceso público (metas)
-export async function canAccessMetas(): Promise<boolean> {
-  return true // Siempre accesible
+// Verificar si es administrador
+export async function isAdmin(): Promise<boolean> {
+  const role = await getUserRole()
+  return role === "admin"
+}
+
+// Verificar acceso general basado en ruta
+export async function checkRouteAccess(pathname: string): Promise<{
+  allowed: boolean
+  message?: string
+}> {
+  const role = await getUserRole()
+  
+  // Rutas públicas
+  const publicRoutes = ["/", "/login", "/metas", "/acerca-de"]
+  if (publicRoutes.some(route => pathname === route || pathname.startsWith(route + "/"))) {
+    return { allowed: true }
+  }
+
+  // Si no hay usuario autenticado
+  if (!role) {
+    return { 
+      allowed: false, 
+      message: "Debes iniciar sesión para acceder a esta página" 
+    }
+  }
+
+  // Rutas de reportes (NO estudiantes)
+  if (pathname.startsWith("/reportes")) {
+    if (["estudiante"].includes(role)) {
+      return { 
+        allowed: false, 
+        message: "Los estudiantes no tienen acceso a los reportes" 
+      }
+    }
+    return { allowed: true }
+  }
+
+  // Rutas de admin (solo admin)
+  if (pathname.startsWith("/admin") || pathname.startsWith("/gestion-usuarios")) {
+    if (role !== "admin") {
+      return { 
+        allowed: false, 
+        message: "Solo los administradores pueden acceder a esta sección" 
+      }
+    }
+    return { allowed: true }
+  }
+
+  // Rutas de formularios (todos autenticados)
+  if (pathname.startsWith("/formularios")) {
+    return { allowed: true }
+  }
+
+  // Rutas que requieren autenticación general
+  const authRoutes = ["/perfil", "/avances"]
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    return { allowed: true }
+  }
+
+  // Por defecto, denegar acceso
+  return { 
+    allowed: false, 
+    message: "Acceso no autorizado" 
+  }
 }
