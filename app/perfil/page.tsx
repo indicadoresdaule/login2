@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
-type UserRole = "admin" | "tecnico" | "normal"
+type UserRole = "admin" | "docente" | "tecnico" | "estudiante"
 
 interface UserProfile {
   id: string
@@ -68,6 +68,10 @@ export default function PerfilPage() {
         return <Shield className="w-5 h-5" />
       case "tecnico":
         return <Wrench className="w-5 h-5" />
+      case "docente":
+        return <User className="w-5 h-5" />
+      case "estudiante":
+        return <User className="w-5 h-5" />
       default:
         return <User className="w-5 h-5" />
     }
@@ -76,14 +80,16 @@ export default function PerfilPage() {
   const getRoleBadge = (role: UserRole) => {
     const colors = {
       admin: "bg-red-500/10 text-red-500 border-red-500/20",
+      docente: "bg-purple-500/10 text-purple-500 border-purple-500/20",
       tecnico: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      normal: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+      estudiante: "bg-gray-500/10 text-gray-500 border-gray-500/20",
     }
 
     const labels = {
       admin: "Administrador",
+      docente: "Docente",
       tecnico: "Técnico",
-      normal: "Usuario Normal",
+      estudiante: "Estudiante",
     }
 
     return (
@@ -201,6 +207,34 @@ export default function PerfilPage() {
                     <p className="font-semibold text-blue-600">Permisos Técnicos</p>
                     <p className="text-sm text-blue-600/80 mt-0.5">
                       Tienes acceso a funciones técnicas avanzadas del sistema
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profile.role === "docente" && (
+              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <User className="w-6 h-6 text-purple-500" />
+                  <div>
+                    <p className="font-semibold text-purple-600">Permisos de Docente</p>
+                    <p className="text-sm text-purple-600/80 mt-0.5">
+                      Tienes acceso al panel docente para gestionar cursos y estudiantes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profile.role === "estudiante" && (
+              <div className="p-4 bg-gray-500/10 border border-gray-500/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <User className="w-6 h-6 text-gray-500" />
+                  <div>
+                    <p className="font-semibold text-gray-600">Permisos de Estudiante</p>
+                    <p className="text-sm text-gray-600/80 mt-0.5">
+                      Tienes acceso a los cursos y recursos asignados
                     </p>
                   </div>
                 </div>
