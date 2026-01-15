@@ -45,14 +45,25 @@ export async function updateSession(request: NextRequest) {
   // Página pública
   if (isMetasRoute) return supabaseResponse
 
-  // Verificar acceso
+  // Verificar acceso - USUARIO NO AUTENTICADO
   if ((isAuthRoute || isReportesRoute || isFormulariosRoute) && !user) {
+    const safeMessage = "🔒 Acceso Restringido\\n\\nDebes iniciar sesión para acceder a esta página. Serás redirigido automáticamente al inicio de sesión."
+    
     return new Response(
-      `<script>alert("⚠️ Acceso denegado\\n\\nDebes iniciar sesión."); history.back();</script>`,
-      { status: 403, headers: { 'Content-Type': 'text/html' } }
+      `<html><head><meta charset="UTF-8"><script>
+        alert("${safeMessage}");
+        window.location.href = '/login?redirectedFrom=${encodeURIComponent(request.nextUrl.pathname)}';
+      </script></head><body></body></html>`,
+      { 
+        status: 401, 
+        headers: { 
+          'Content-Type': 'text/html; charset=utf-8',
+        } 
+      }
     )
   }
 
+  // USUARIO AUTENTICADO - Verificar roles
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -62,19 +73,57 @@ export async function updateSession(request: NextRequest) {
 
     const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null
 
-    // Reportes: NO estudiantes
+    // Reportes: NO estudiantes (solo admin, docente, tecnico)
     if (isReportesRoute && userRole && !["admin", "docente", "tecnico"].includes(userRole)) {
+      const safeMessage = "🚫 Acceso Denegado\\n\\nSolo administradores, docentes y técnicos pueden acceder a los reportes. Los estudiantes no tienen permiso para esta sección."
+      
       return new Response(
-        `<script>alert("🚫 Acceso denegado\\n\\nSolo administradores, docentes y técnicos pueden ver reportes."); window.location.href='/';</script>`,
-        { status: 403, headers: { 'Content-Type': 'text/html' } }
+        `<html><head><meta charset="UTF-8"><script>
+          alert("${safeMessage}");
+          window.location.href = '/';
+        </script></head><body></body></html>`,
+        { 
+          status: 403, 
+          headers: { 
+            'Content-Type': 'text/html; charset=utf-8',
+          } 
+        }
       )
     }
 
     // Admin: SOLO administradores
     if (isAdminRoute && userRole !== "admin") {
+      const safeMessage = "👑 Acceso Exclusivo\\n\\nEsta sección es exclusiva para administradores del sistema. No tienes los permisos necesarios."
+      
       return new Response(
-        `<script>alert("👑 Acceso denegado\\n\\nSolo administradores pueden acceder aquí."); window.location.href='/';</script>`,
-        { status: 403, headers: { 'Content-Type': 'text/html' } }
+        `<html><head><meta charset="UTF-8"><script>
+          alert("${safeMessage}");
+          window.location.href = '/';
+        </script></head><body></body></html>`,
+        { 
+          status: 403, 
+          headers: { 
+            'Content-Type': 'text/html; charset=utf-8',
+          } 
+        }
+      )
+    }
+
+    // Formularios: Verificar que tenga rol (todos los autenticados con rol)
+    if (isFormulariosRoute && !userRole) {
+      const safeMessage = "⚠️ Error de Permisos\\n\\nNo se pudo verificar tu rol de usuario. Por favor, contacta al administrador."
+      
+      return new Response(
+        `<html><head><meta charset="UTF-8"><script>
+          alert("${safeMessage}");
+          window.location.href = '/';
+        </script></head><body></body></html>`,
+        { 
+          status: 403, 
+          headers: { 
+            'Content-Type': 'text/html; charset=utf-8',
+          } 
+        }
       )
     }
   }
