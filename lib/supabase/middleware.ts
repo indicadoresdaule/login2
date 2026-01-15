@@ -1,30 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-// Función para modificar la respuesta HTML e inyectar script de alerta
-async function injectAlertScript(response: Response, message: string, redirectUrl: string) {
-  const html = await response.text()
-  
-  // Crear script que se ejecutará al cargar la página
-  const alertScript = `
-    <script>
-      // Mostrar alerta inmediatamente
-      alert("${message.replace(/"/g, '\\"')}");
-      
-      // Redirigir después de cerrar la alerta
-      window.location.href = "${redirectUrl}";
-    </script>
-  `
-  
-  // Insertar el script justo antes del cierre de </body>
-  const modifiedHtml = html.replace('</body>', `${alertScript}</body>`)
-  
-  return new Response(modifiedHtml, {
-    status: response.status,
-    headers: response.headers,
-  })
-}
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -51,7 +27,6 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Refresh session if expired
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -61,8 +36,6 @@ export async function updateSession(request: NextRequest) {
   const formulariosRoute = "/formularios"
   const metasRoute = "/metas"
   const adminRoutes = ["/admin", "/gestion-usuarios"]
-  
-  // Rutas que requieren autenticación básica
   const authRoutes = ["/perfil", "/avances", ...adminRoutes]
 
   const isReportesRoute = request.nextUrl.pathname.startsWith(reportesRoute)
@@ -71,29 +44,20 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   const isAuthRoute = authRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
-  // Las metas son públicas - no requieren autenticación
+  // Las metas son públicas
   if (isMetasRoute) {
     return supabaseResponse
   }
 
-  // Verificar autenticación para rutas que la requieren
+  // Verificar acceso no autenticado
   if ((isAuthRoute || isReportesRoute || isFormulariosRoute) && !user) {
-    // Redirigir al login pero primero mostrar alerta
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    url.searchParams.set("redirectedFrom", request.nextUrl.pathname)
-    
-    // Modificar la respuesta para mostrar alerta antes de redirigir
-    const redirectResponse = NextResponse.redirect(url)
-    
-    // Devolver una página temporal que solo muestra la alerta y redirige
     const alertHtml = `
       <!DOCTYPE html>
       <html>
         <head><title>Redirigiendo...</title></head>
         <body>
           <script>
-            alert("Debes iniciar sesión para acceder a esta página.")
+            alert("⚠️ Debes iniciar sesión para acceder a esta página.")
             window.location.href = "/login?redirectedFrom=${encodeURIComponent(request.nextUrl.pathname)}"
           </script>
         </body>
@@ -106,9 +70,8 @@ export async function updateSession(request: NextRequest) {
     })
   }
 
-  // Si el usuario está autenticado, verificar roles específicos
+  // Verificar roles si el usuario está autenticado
   if (user) {
-    // Obtener el perfil del usuario para verificar su rol
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -117,7 +80,7 @@ export async function updateSession(request: NextRequest) {
 
     const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null
 
-    // Verificar acceso a reportes (SOLO admin, docente, tecnico - NO estudiantes)
+    // Verificar acceso a reportes (NO estudiantes)
     if (isReportesRoute && userRole) {
       const allowedRoles = ["admin", "docente", "tecnico"]
       if (!allowedRoles.includes(userRole)) {
@@ -127,7 +90,7 @@ export async function updateSession(request: NextRequest) {
             <head><title>Redirigiendo...</title></head>
             <body>
               <script>
-                alert("Acceso denegado. Solo administradores, docentes y técnicos pueden acceder a los reportes.")
+                alert("🚫 Acceso denegado. Solo administradores, docentes y técnicos pueden ver reportes.")
                 window.location.href = "/"
               </script>
             </body>
@@ -141,7 +104,7 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // Verificar acceso a rutas de admin (SOLO administradores)
+    // Verificar acceso a admin (SOLO administradores)
     if (isAdminRoute && userRole !== "admin") {
       const alertHtml = `
         <!DOCTYPE html>
@@ -149,7 +112,7 @@ export async function updateSession(request: NextRequest) {
           <head><title>Redirigiendo...</title></head>
           <body>
             <script>
-              alert("Acceso denegado. Solo los administradores pueden acceder a esta sección.")
+              alert("👑 Acceso restringido. Solo administradores pueden acceder.")
               window.location.href = "/"
             </script>
           </body>
@@ -163,7 +126,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from login
+  // Usuario autenticado intentando acceder a login
   if (request.nextUrl.pathname === "/login" && user) {
     const alertHtml = `
       <!DOCTYPE html>
@@ -171,7 +134,7 @@ export async function updateSession(request: NextRequest) {
         <head><title>Redirigiendo...</title></head>
         <body>
           <script>
-            alert("Ya has iniciado sesión.")
+            alert("✅ Ya has iniciado sesión.")
             window.location.href = "/"
           </script>
         </body>
