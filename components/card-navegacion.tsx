@@ -31,7 +31,7 @@ export function CardNavegacion({ href, titulo, descripcion, color }: CardNavegac
     <Link href={href}>
       <div className="h-full group cursor-pointer">
         <div
-          className={`flex flex-col h-full rounded-xl border-2 transition-all duration-300 p-7 ${colorBgMap[color]} hover:border-primary/40 hover:shadow-lg hover:scale-105`}
+          className={`flex flex-col h-full rounded-xl border-2 transition-all duration-300 p-7 ${colorBgMap[color]} hover:border-primary/40 hover:shadow-lg`}
         >
           <h3
             className="text-xl font-bold text-foreground mb-3 group-hover:transition-colors"

@@ -677,14 +677,19 @@ function GraficosPorSeccion({ datos, seccion }: { datos: any[]; seccion: string 
           )}
         </TabsContent>
 
-        <TabsContent value="tabla" className="w-full overflow-x-auto">
+        <TabsContent value="tabla" className="w-full overflow-x-visible">
           <div className="hidden md:block">
-            <Table>
+            <Table className="w-full table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%] text-xs lg:text-sm">Pregunta</TableHead>
+                  <TableHead className="min-w-[300px] max-w-[400px] text-xs lg:text-sm break-words whitespace-normal align-top">
+                    Pregunta
+                  </TableHead>
                   {respuestasKeys.map((key) => (
-                    <TableHead key={key} className="text-center text-xs lg:text-sm">
+                    <TableHead 
+                      key={key} 
+                      className="text-center min-w-[80px] max-w-[120px] text-xs lg:text-sm px-2 break-words whitespace-normal align-top"
+                    >
                       {key}
                     </TableHead>
                   ))}
@@ -693,9 +698,14 @@ function GraficosPorSeccion({ datos, seccion }: { datos: any[]; seccion: string 
               <TableBody>
                 {datosTabla.map((item, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-medium text-xs lg:text-sm">{item.pregunta}</TableCell>
+                    <TableCell className="font-medium min-w-[300px] max-w-[400px] text-xs lg:text-sm break-words whitespace-normal align-top">
+                      {item.pregunta}
+                    </TableCell>
                     {respuestasKeys.map((key) => (
-                      <TableCell key={key} className="text-center text-xs lg:text-sm">
+                      <TableCell 
+                        key={key} 
+                        className="text-center min-w-[80px] max-w-[120px] text-xs lg:text-sm px-2 align-top"
+                      >
                         {item.respuestas[key] || 0}
                       </TableCell>
                     ))}
@@ -707,14 +717,18 @@ function GraficosPorSeccion({ datos, seccion }: { datos: any[]; seccion: string 
           <div className="md:hidden space-y-4">
             {datosTabla.map((item, index) => (
               <Card key={index} className="p-4 border border-border">
-                <h4 className="font-bold text-sm text-foreground mb-3">{item.pregunta}</h4>
+                <h4 className="font-bold text-sm text-foreground mb-3 break-words whitespace-normal">
+                  {item.pregunta}
+                </h4>
                 <div className="space-y-2">
                   {respuestasKeys.map((key) => (
                     <div
                       key={key}
                       className="flex justify-between items-center py-1 border-b border-border/50 last:border-0"
                     >
-                      <span className="text-xs text-foreground/70">{key}</span>
+                      <span className="text-xs text-foreground/70 break-words whitespace-normal max-w-[70%]">
+                        {key}
+                      </span>
                       <span className="text-xs font-semibold text-foreground">{item.respuestas[key] || 0}</span>
                     </div>
                   ))}
@@ -1216,37 +1230,53 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
               <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-4 sm:mb-6">
                 {seccion.titulo} - Datos Detallados
               </h3>
-              <div className="space-y-6 sm:space-y-8">
+              <div className="space-y-6 sm:space-y-8 overflow-x-visible">
                 {seccionKey === "distribucion-demografica" && tablasSeccion && tablasSeccion.length > 0 && (
-                  <div className="space-y-6 sm:space-y-8">
+                  <div className="space-y-6 sm:space-y-8 overflow-x-visible">
                     {tablasSeccion?.map((tabla, idx) => (
                       <div key={idx}>
-                        <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                        <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4 break-words">
                           {tabla.nombreGrupo}
                         </h4>
-                        <div className="w-full overflow-x-auto">
-                          <Table>
+                        <div className="w-full overflow-x-visible">
+                          <Table className="w-full table-auto">
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="font-bold text-xs sm:text-sm">Categoría</TableHead>
-                                <TableHead className="font-bold text-right text-xs sm:text-sm">Cantidad</TableHead>
-                                <TableHead className="font-bold text-right text-xs sm:text-sm">% del Total</TableHead>
+                                <TableHead className="font-bold min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                  Categoría
+                                </TableHead>
+                                <TableHead className="font-bold text-right min-w-[100px] text-xs sm:text-sm align-top">
+                                  Cantidad
+                                </TableHead>
+                                <TableHead className="font-bold text-right min-w-[120px] text-xs sm:text-sm align-top">
+                                  % del Total
+                                </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {tabla.datos.map((fila, idx2) => (
                                 <TableRow key={idx2}>
-                                  <TableCell className="font-medium text-xs sm:text-sm">{fila.name}</TableCell>
-                                  <TableCell className="text-right text-xs sm:text-sm">{fila.value}</TableCell>
-                                  <TableCell className="text-right text-xs sm:text-sm">
+                                  <TableCell className="font-medium min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                    {fila.name}
+                                  </TableCell>
+                                  <TableCell className="text-right min-w-[100px] text-xs sm:text-sm align-top">
+                                    {fila.value}
+                                  </TableCell>
+                                  <TableCell className="text-right min-w-[120px] text-xs sm:text-sm align-top">
                                     {formatearPorcentaje(fila.porcentaje)}
                                   </TableCell>
                                 </TableRow>
                               ))}
                               <TableRow className="bg-muted/50 font-bold">
-                                <TableCell className="text-xs sm:text-sm">Total</TableCell>
-                                <TableCell className="text-right text-xs sm:text-sm">{tabla.total}</TableCell>
-                                <TableCell className="text-right text-xs sm:text-sm">100%</TableCell>
+                                <TableCell className="min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                  Total
+                                </TableCell>
+                                <TableCell className="text-right min-w-[100px] text-xs sm:text-sm align-top">
+                                  {tabla.total}
+                                </TableCell>
+                                <TableCell className="text-right min-w-[120px] text-xs sm:text-sm align-top">
+                                  100%
+                                </TableCell>
                               </TableRow>
                             </TableBody>
                           </Table>
@@ -1257,24 +1287,32 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                 )}
 
                 {seccionKey !== "distribucion-demografica" && tablasLikert && tablasLikert.length > 0 && (
-                  <div className="space-y-6 sm:space-y-8">
+                  <div className="space-y-6 sm:space-y-8 overflow-x-visible">
                     <div className="w-full">
                       {/* Versión Desktop: Tabla tradicional */}
-                      <div className="hidden lg:block">
-                        <Table>
+                      <div className="hidden lg:block overflow-x-visible">
+                        <Table className="w-full table-auto">
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="font-bold">Pregunta</TableHead>
-                              <TableHead className="font-bold text-center whitespace-nowrap">
+                              <TableHead className="font-bold min-w-[300px] max-w-[500px] break-words whitespace-normal align-top">
+                                Pregunta
+                              </TableHead>
+                              <TableHead className="font-bold text-center min-w-[100px] whitespace-normal px-2 break-words align-top">
                                 Totalmente Desacuerdo
                               </TableHead>
-                              <TableHead className="font-bold text-center whitespace-nowrap">Desacuerdo</TableHead>
-                              <TableHead className="font-bold text-center whitespace-nowrap">Indiferente</TableHead>
-                              <TableHead className="font-bold text-center whitespace-nowrap">De Acuerdo</TableHead>
-                              <TableHead className="font-bold text-center whitespace-nowrap">
+                              <TableHead className="font-bold text-center min-w-[90px] whitespace-normal px-2 break-words align-top">
+                                Desacuerdo
+                              </TableHead>
+                              <TableHead className="font-bold text-center min-w-[90px] whitespace-normal px-2 break-words align-top">
+                                Indiferente
+                              </TableHead>
+                              <TableHead className="font-bold text-center min-w-[90px] whitespace-normal px-2 break-words align-top">
+                                De Acuerdo
+                              </TableHead>
+                              <TableHead className="font-bold text-center min-w-[110px] whitespace-normal px-2 break-words align-top">
                                 Totalmente Acuerdo
                               </TableHead>
-                              <TableHead className="font-bold text-center bg-muted whitespace-nowrap">
+                              <TableHead className="font-bold text-center bg-muted min-w-[100px] whitespace-normal px-2 break-words align-top">
                                 Promedio
                               </TableHead>
                             </TableRow>
@@ -1282,42 +1320,44 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                           <TableBody>
                             {tablasLikert.map((tabla, idx) => (
                               <TableRow key={idx}>
-                                <TableCell className="font-medium text-sm leading-tight py-3">
+                                <TableCell className="font-medium text-sm leading-tight py-3 min-w-[300px] max-w-[500px] break-words whitespace-normal align-top">
                                   {tabla.pregunta}
                                 </TableCell>
-                                <TableCell className="text-center text-sm py-3">
+                                <TableCell className="text-center text-sm py-3 min-w-[100px] align-top">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Totalmente desacuerdo"] / tabla.totalEncuestas) * 100)
                                     : "0%"}
                                 </TableCell>
-                                <TableCell className="text-center text-sm py-3">
+                                <TableCell className="text-center text-sm py-3 min-w-[90px] align-top">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Desacuerdo"] / tabla.totalEncuestas) * 100)
                                     : "0%"}
                                 </TableCell>
-                                <TableCell className="text-center text-sm py-3">
+                                <TableCell className="text-center text-sm py-3 min-w-[90px] align-top">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Indiferente"] / tabla.totalEncuestas) * 100)
                                     : "0%"}
                                 </TableCell>
-                                <TableCell className="text-center text-sm py-3">
+                                <TableCell className="text-center text-sm py-3 min-w-[90px] align-top">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["De acuerdo"] / tabla.totalEncuestas) * 100)
                                     : "0%"}
                                 </TableCell>
-                                <TableCell className="text-center text-sm py-3">
+                                <TableCell className="text-center text-sm py-3 min-w-[110px] align-top">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Totalmente de acuerdo"] / tabla.totalEncuestas) * 100)
                                     : "0%"}
                                 </TableCell>
-                                <TableCell className="text-center bg-muted font-bold text-sm py-3">
+                                <TableCell className="text-center bg-muted font-bold text-sm py-3 min-w-[100px] align-top">
                                   {formatearPorcentaje(tabla.promedio)}
                                 </TableCell>
                               </TableRow>
                             ))}
                             <TableRow className="bg-muted/70">
-                              <TableCell className="font-bold text-sm py-3">Promedio General</TableCell>
-                              <TableCell className="text-center font-bold text-sm py-3">
+                              <TableCell className="font-bold text-sm py-3 min-w-[300px] max-w-[500px] break-words whitespace-normal align-top">
+                                Promedio General
+                              </TableCell>
+                              <TableCell className="text-center font-bold text-sm py-3 min-w-[100px] align-top">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce(
@@ -1327,7 +1367,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                     )
                                   : "0%"}
                               </TableCell>
-                              <TableCell className="text-center font-bold text-sm py-3">
+                              <TableCell className="text-center font-bold text-sm py-3 min-w-[90px] align-top">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce(
@@ -1337,7 +1377,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                     )
                                   : "0%"}
                               </TableCell>
-                              <TableCell className="text-center font-bold text-sm py-3">
+                              <TableCell className="text-center font-bold text-sm py-3 min-w-[90px] align-top">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce(
@@ -1347,7 +1387,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                     )
                                   : "0%"}
                               </TableCell>
-                              <TableCell className="text-center font-bold text-sm py-3">
+                              <TableCell className="text-center font-bold text-sm py-3 min-w-[90px] align-top">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce(
@@ -1357,7 +1397,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                     )
                                   : "0%"}
                               </TableCell>
-                              <TableCell className="text-center font-bold text-sm py-3">
+                              <TableCell className="text-center font-bold text-sm py-3 min-w-[110px] align-top">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce(
@@ -1367,7 +1407,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                     )
                                   : "0%"}
                               </TableCell>
-                              <TableCell className="text-center bg-muted font-bold text-sm py-3">
+                              <TableCell className="text-center bg-muted font-bold text-sm py-3 min-w-[100px] align-top">
                                 {tablasLikert.length > 0
                                   ? formatearPorcentaje(
                                       tablasLikert.reduce((sum, t) => sum + t.promedio, 0) / tablasLikert.length
@@ -1382,12 +1422,14 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                       <div className="lg:hidden space-y-6">
                         {tablasLikert.map((tabla, idx) => (
                           <div key={idx} className="border rounded-lg p-4 bg-card">
-                            <h5 className="font-semibold text-sm mb-4 text-foreground leading-tight">
+                            <h5 className="font-semibold text-sm mb-4 text-foreground leading-tight break-words whitespace-normal">
                               {tabla.pregunta}
                             </h5>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center py-2 border-b">
-                                <span className="text-xs font-medium text-muted-foreground">Totalmente Desacuerdo</span>
+                                <span className="text-xs font-medium text-muted-foreground break-words whitespace-normal max-w-[70%]">
+                                  Totalmente Desacuerdo
+                                </span>
                                 <span className="text-sm font-semibold">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Totalmente desacuerdo"] / tabla.totalEncuestas) * 100)
@@ -1395,7 +1437,9 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b">
-                                <span className="text-xs font-medium text-muted-foreground">Desacuerdo</span>
+                                <span className="text-xs font-medium text-muted-foreground break-words whitespace-normal max-w-[70%]">
+                                  Desacuerdo
+                                </span>
                                 <span className="text-sm font-semibold">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Desacuerdo"] / tabla.totalEncuestas) * 100)
@@ -1403,7 +1447,9 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b">
-                                <span className="text-xs font-medium text-muted-foreground">Indiferente</span>
+                                <span className="text-xs font-medium text-muted-foreground break-words whitespace-normal max-w-[70%]">
+                                  Indiferente
+                                </span>
                                 <span className="text-sm font-semibold">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Indiferente"] / tabla.totalEncuestas) * 100)
@@ -1411,7 +1457,9 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b">
-                                <span className="text-xs font-medium text-muted-foreground">De Acuerdo</span>
+                                <span className="text-xs font-medium text-muted-foreground break-words whitespace-normal max-w-[70%]">
+                                  De Acuerdo
+                                </span>
                                 <span className="text-sm font-semibold">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["De acuerdo"] / tabla.totalEncuestas) * 100)
@@ -1419,7 +1467,9 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b">
-                                <span className="text-xs font-medium text-muted-foreground">Totalmente Acuerdo</span>
+                                <span className="text-xs font-medium text-muted-foreground break-words whitespace-normal max-w-[70%]">
+                                  Totalmente Acuerdo
+                                </span>
                                 <span className="text-sm font-semibold">
                                   {tabla.totalEncuestas > 0
                                     ? formatearPorcentaje((tabla.conteos["Totalmente de acuerdo"] / tabla.totalEncuestas) * 100)
@@ -1436,10 +1486,10 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
 
                         {/* Promedio General en mobile */}
                         <div className="border rounded-lg p-4 bg-muted/70">
-                          <h5 className="font-bold text-sm mb-4">Promedio General</h5>
+                          <h5 className="font-bold text-sm mb-4 break-words whitespace-normal">Promedio General</h5>
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div>
-                              <span className="text-muted-foreground block mb-1">Totalmente Desacuerdo</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">Totalmente Desacuerdo</span>
                               <span className="font-semibold">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
@@ -1452,7 +1502,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block mb-1">Desacuerdo</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">Desacuerdo</span>
                               <span className="font-semibold">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
@@ -1465,7 +1515,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block mb-1">Indiferente</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">Indiferente</span>
                               <span className="font-semibold">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
@@ -1478,7 +1528,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block mb-1">De Acuerdo</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">De Acuerdo</span>
                               <span className="font-semibold">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
@@ -1491,7 +1541,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block mb-1">Totalmente Acuerdo</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">Totalmente Acuerdo</span>
                               <span className="font-semibold">
                                 {tablasLikert.length > 0 && tablasLikert[0].totalEncuestas > 0
                                   ? formatearPorcentaje(
@@ -1504,7 +1554,7 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                               </span>
                             </div>
                             <div className="col-span-2 mt-2 pt-2 border-t">
-                              <span className="text-muted-foreground block mb-1">Promedio Total</span>
+                              <span className="text-muted-foreground block mb-1 break-words whitespace-normal">Promedio Total</span>
                               <span className="font-bold text-base">
                                 {tablasLikert.length > 0
                                   ? formatearPorcentaje(
