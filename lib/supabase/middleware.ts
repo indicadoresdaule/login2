@@ -15,11 +15,13 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     },
@@ -32,50 +34,71 @@ export async function updateSession(request: NextRequest) {
 
   // Rutas que requieren autenticación pero no verificación de rol específico
   const authRoutes = ["/perfil", "/avances"]
-
-  // Reportes: solo administradores, docentes, tecnicos (NO estudiantes)
+  
+  // Reportes: SOLO administradores, docentes, tecnicos
   const reportesRoute = "/reportes"
-
-  // Formularios: administradores, docentes, tecnicos, estudiantes (todos los usuarios autenticados)
+  
+  // Formularios: administradores, docentes, tecnicos, estudiantes (todos autenticados)
   const formulariosRoute = "/formularios"
-
+  
+  // Metas: público para todos (no requiere autenticación)
+  const metasRoute = "/metas"
+  
   // Admin routes
   const adminRoutes = ["/admin", "/gestion-usuarios"]
 
   const isAuthRoute = authRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   const isReportesRoute = request.nextUrl.pathname.startsWith(reportesRoute)
   const isFormulariosRoute = request.nextUrl.pathname.startsWith(formulariosRoute)
+  const isMetasRoute = request.nextUrl.pathname.startsWith(metasRoute)
   const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
-  // Verificar autenticación básica
+  // Las metas son públicas - no requieren autenticación
+  if (isMetasRoute) {
+    return supabaseResponse
+  }
+
+  // Verificar autenticación para rutas que la requieren
   if ((isAuthRoute || isReportesRoute || isFormulariosRoute || isAdminRoute) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
+    url.searchParams.set("redirectedFrom", request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 
   // Si el usuario está autenticado, verificar roles específicos
   if (user) {
     // Obtener el perfil del usuario para verificar su rol
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single()
 
-    // Verificar acceso a reportes (solo administradores, docentes, tecnicos)
-    if (isReportesRoute && profile) {
-      const allowedRoles = ["admin", "docente", "tecnico", "estudiante"]
-      if (!allowedRoles.includes(profile.role)) {
+    const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null
+
+    // Verificar acceso a reportes (SOLO admin, docente, tecnico - NO estudiantes)
+    if (isReportesRoute && userRole) {
+      const allowedRoles = ["admin", "docente", "tecnico"]
+      if (!allowedRoles.includes(userRole)) {
         const url = request.nextUrl.clone()
-        url.pathname = "/"
+        url.pathname = "/acceso-denegado"
         return NextResponse.redirect(url)
       }
     }
 
-    // Verificar acceso a rutas de admin (solo administradores)
-    if (isAdminRoute && profile) {
-      if (profile.role !== "admin") {
-        const url = request.nextUrl.clone()
-        url.pathname = "/"
-        return NextResponse.redirect(url)
-      }
+    // Verificar acceso a formularios (todos los usuarios autenticados)
+    if (isFormulariosRoute && !userRole) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/acceso-denegado"
+      return NextResponse.redirect(url)
+    }
+
+    // Verificar acceso a rutas de admin (SOLO administradores)
+    if (isAdminRoute && userRole !== "admin") {
+      const url = request.nextUrl.clone()
+      url.pathname = "/acceso-denegado"
+      return NextResponse.redirect(url)
     }
   }
 
