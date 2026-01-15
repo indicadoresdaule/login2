@@ -1,29 +1,48 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-// Función para crear una respuesta que solo muestra alerta
-function createAlertOnlyResponse(message: string) {
-  // Crear una respuesta con código 403 Forbidden
-  // pero que solo muestre la alerta y no cargue la página
+// Función para crear una respuesta que muestra alerta y luego redirige
+function createAlertAndRedirectResponse(message: string, redirectPath: string = "/") {
+  const safeMessage = message
+    .replace(/"/g, '\\"')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+
   return new Response(
     `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Acceso Denegado</title>
+        <meta charset="UTF-8">
+        <title>Redireccionando...</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+          }
+          .loading {
+            color: #6c757d;
+            font-size: 16px;
+          }
+        </style>
         <script>
-          // Mostrar alerta inmediatamente
-          alert("${message.replace(/"/g, '\\"').replace(/'/g, "\\'")}");
-          
-          // Regresar a la página anterior
-          window.history.back();
-          
-          // Prevenir cualquier acción adicional
-          window.stop();
+          // Mostrar alerta
+          setTimeout(() => {
+            alert("${safeMessage}");
+            // Redirigir después de cerrar la alerta
+            window.location.href = "${redirectPath}";
+          }, 100);
         </script>
       </head>
       <body>
-        <div style="display: none;">Acceso denegado</div>
+        <div class="loading">Procesando acceso...</div>
       </body>
     </html>
     `,
@@ -80,19 +99,20 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   const isAuthRoute = authRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
-  // Las metas son públicas - no requieren autenticación
+  // Las metas son públicas
   if (isMetasRoute) {
     return supabaseResponse
   }
 
-  // Verificar autenticación para rutas protegidas
+  // Verificar autenticación
   if ((isAuthRoute || isReportesRoute || isFormulariosRoute) && !user) {
-    return createAlertOnlyResponse(
-      "⚠️ Acceso denegado\n\nDebes iniciar sesión para acceder a esta página.\n\nSerás redirigido a la página anterior."
+    return createAlertAndRedirectResponse(
+      "🔒 Acceso restringido\n\nDebes iniciar sesión para acceder a esta página.",
+      `/login?redirectedFrom=${encodeURIComponent(request.nextUrl.pathname)}`
     )
   }
 
-  // Si el usuario está autenticado, verificar roles específicos
+  // Verificar roles si el usuario está autenticado
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -102,36 +122,37 @@ export async function updateSession(request: NextRequest) {
 
     const userRole = profile?.role as "admin" | "docente" | "tecnico" | "estudiante" | null
 
-    // Verificar acceso a reportes (SOLO admin, docente, tecnico - NO estudiantes)
+    // Verificar acceso a reportes (NO estudiantes)
     if (isReportesRoute && userRole) {
       const allowedRoles = ["admin", "docente", "tecnico"]
       if (!allowedRoles.includes(userRole)) {
-        return createAlertOnlyResponse(
-          "🚫 Acceso denegado\n\nSolo administradores, docentes y técnicos pueden acceder a los reportes.\n\nLos estudiantes no tienen acceso a esta sección."
+        return createAlertAndRedirectResponse(
+          "📊 Acceso denegado\n\nSolo administradores, docentes y técnicos pueden acceder a los reportes.\n\nLos estudiantes no tienen acceso a esta sección.",
+          "/"
         )
       }
     }
 
-    // Verificar acceso a rutas de admin (SOLO administradores)
+    // Verificar acceso a admin (SOLO administradores)
     if (isAdminRoute && userRole !== "admin") {
-      return createAlertOnlyResponse(
-        "👑 Acceso restringido\n\nEsta sección es exclusiva para administradores del sistema.\n\nNo tienes los permisos necesarios."
+      return createAlertAndRedirectResponse(
+        "👑 Acceso exclusivo\n\nEsta sección es solo para administradores del sistema.",
+        "/"
       )
     }
 
-    // Verificar acceso a formularios (todos los usuarios autenticados)
+    // Verificar acceso a formularios
     if (isFormulariosRoute && !userRole) {
-      return createAlertOnlyResponse(
-        "❌ Error de permisos\n\nNo se pudo verificar tu rol de usuario.\n\nPor favor, contacta al administrador."
+      return createAlertAndRedirectResponse(
+        "⚠️ Error de permisos\n\nNo se pudo verificar tu rol de usuario.",
+        "/"
       )
     }
   }
 
-  // Redirect logged-in users away from login
+  // Redirigir usuarios autenticados desde login
   if (request.nextUrl.pathname === "/login" && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL("/", request.url))
   }
 
   return supabaseResponse
