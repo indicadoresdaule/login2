@@ -17,6 +17,7 @@ import {
   UserX,
   UserCheck,
   ArrowLeft,
+  Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -44,12 +45,13 @@ import {
 } from "@/components/ui/alert-dialog"
 
 type UserRole = "admin" | "docente" | "tecnico" | "estudiante"
+type UserStatus = "active" | "inactive" | "pending"
 
 interface UserProfile {
   id: string
   email: string
   role: UserRole
-  status: string
+  status: UserStatus // Added status field
   created_at: string
   updated_at: string
 }
@@ -70,6 +72,7 @@ export default function GestionUsuariosPage() {
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Create user states
@@ -89,6 +92,10 @@ export default function GestionUsuariosPage() {
   const [deleteUser, setDeleteUser] = useState<UserData | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
+  const [suspendUser, setSuspendUser] = useState<UserData | null>(null)
+  const [suspendOpen, setSuspendOpen] = useState(false)
+  const [suspendAction, setSuspendAction] = useState<"suspend" | "reactivate">("suspend")
+
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export default function GestionUsuariosPage() {
 
   useEffect(() => {
     filterUsers()
-  }, [users, searchTerm, roleFilter])
+  }, [users, searchTerm, roleFilter, statusFilter])
 
   const checkAuth = async () => {
     try {
@@ -146,6 +153,10 @@ export default function GestionUsuariosPage() {
       filtered = filtered.filter((user) => user.profile?.role === roleFilter)
     }
 
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((user) => user.profile?.status === statusFilter)
+    }
+
     setFilteredUsers(filtered)
   }
 
@@ -190,7 +201,6 @@ export default function GestionUsuariosPage() {
     try {
       const updates: any = { role: editRole }
 
-      // Only update email if it changed
       if (editEmail && editEmail !== editUser.email) {
         updates.email = editEmail
       }
@@ -216,9 +226,13 @@ export default function GestionUsuariosPage() {
     }
   }
 
-  const handleSuspend = async (userId: string, suspended: boolean) => {
+  const handleSuspendConfirm = async () => {
+    if (!suspendUser) return
+
+    const suspended = suspendAction === "suspend"
+
     try {
-      const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+      const response = await fetch(`/api/admin/users/${suspendUser.id}/suspend`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ suspended }),
@@ -237,6 +251,9 @@ export default function GestionUsuariosPage() {
       }
     } catch (error: any) {
       setMessage({ type: "error", text: error.message || "Error al actualizar usuario" })
+    } finally {
+      setSuspendOpen(false)
+      setSuspendUser(null)
     }
   }
 
@@ -299,8 +316,36 @@ export default function GestionUsuariosPage() {
     )
   }
 
-  const isSuspended = (user: UserData) => {
-    return user.banned_until && new Date(user.banned_until) > new Date()
+  const getStatusBadge = (user: UserData) => {
+    const status = user.profile?.status || "active"
+
+    switch (status) {
+      case "inactive":
+        return (
+          <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
+            <UserX className="w-3 h-3 mr-1" />
+            Suspendido
+          </Badge>
+        )
+      case "pending":
+        return (
+          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+            <Clock className="w-3 h-3 mr-1" />
+            Pendiente
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+            <UserCheck className="w-3 h-3 mr-1" />
+            Activo
+          </Badge>
+        )
+    }
+  }
+
+  const isInactive = (user: UserData) => {
+    return user.profile?.status === "inactive"
   }
 
   if (loading) {
@@ -441,6 +486,20 @@ export default function GestionUsuariosPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-full sm:w-48">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="active">Activos</SelectItem>
+                  <SelectItem value="inactive">Suspendidos</SelectItem>
+                  <SelectItem value="pending">Pendientes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="mt-3 text-sm text-secondary-text">
             Mostrando {filteredUsers.length} de {users.length} usuarios
@@ -463,18 +522,15 @@ export default function GestionUsuariosPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredUsers.map((user) => {
-                  const suspended = isSuspended(user)
+                  const inactive = isInactive(user)
                   return (
-                    <tr
-                      key={user.id}
-                      className={`hover:bg-muted/30 transition-colors ${suspended ? "opacity-60" : ""}`}
-                    >
+                    <tr key={user.id} className={`hover:bg-muted/30 transition-colors ${inactive ? "opacity-60" : ""}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center ${suspended ? "bg-red-500/10" : "bg-primary/10"}`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center ${inactive ? "bg-red-500/10" : "bg-primary/10"}`}
                           >
-                            <User className={`w-5 h-5 ${suspended ? "text-red-500" : "text-primary"}`} />
+                            <User className={`w-5 h-5 ${inactive ? "text-red-500" : "text-primary"}`} />
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{user.email}</p>
@@ -485,28 +541,7 @@ export default function GestionUsuariosPage() {
                       <td className="px-6 py-4">
                         {user.profile ? getRoleBadge(user.profile.role) : <Badge>Sin perfil</Badge>}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          {suspended ? (
-                            <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                              <UserX className="w-3 h-3 mr-1" />
-                              Suspendido
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                              <UserCheck className="w-3 h-3 mr-1" />
-                              Activo
-                            </Badge>
-                          )}
-                          {user.profile?.status && (
-                            <span className="text-xs text-secondary-text">
-                              {user.profile.status === "active" && "✓ Perfil activo"}
-                              {user.profile.status === "inactive" && "○ Perfil inactivo"}
-                              {user.profile.status === "pending" && "⏳ Pendiente"}
-                            </span>
-                          )}
-                        </div>
-                      </td>
+                      <td className="px-6 py-4">{getStatusBadge(user)}</td>
                       <td className="px-6 py-4 text-sm text-secondary-text">
                         {new Date(user.created_at).toLocaleDateString("es-ES")}
                       </td>
@@ -528,29 +563,39 @@ export default function GestionUsuariosPage() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          {suspended ? (
+                          {inactive ? (
+                            // Reactivate button for suspended users
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSuspend(user.id, false)}
+                              onClick={() => {
+                                setSuspendUser(user)
+                                setSuspendAction("reactivate")
+                                setSuspendOpen(true)
+                              }}
                               disabled={user.id === currentUser?.user?.id}
                               title="Reanudar usuario"
                               className="border-green-500/20 text-green-600 hover:bg-green-500/10"
                             >
                               <UserCheck className="w-4 h-4 mr-1" />
-                              <span className="hidden sm:inline">Reanudar</span>
+                              <span className="hidden lg:inline">Reanudar</span>
                             </Button>
                           ) : (
+                            // Suspend button for active users
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSuspend(user.id, true)}
+                              onClick={() => {
+                                setSuspendUser(user)
+                                setSuspendAction("suspend")
+                                setSuspendOpen(true)
+                              }}
                               disabled={user.id === currentUser?.user?.id}
                               title="Suspender usuario"
                               className="border-orange-500/20 text-orange-600 hover:bg-orange-500/10"
                             >
                               <UserX className="w-4 h-4 mr-1" />
-                              <span className="hidden sm:inline">Suspender</span>
+                              <span className="hidden lg:inline">Suspender</span>
                             </Button>
                           )}
                           <Button
@@ -612,6 +657,50 @@ export default function GestionUsuariosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={suspendOpen} onOpenChange={setSuspendOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {suspendAction === "suspend" ? "¿Suspender usuario?" : "¿Reanudar usuario?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {suspendAction === "suspend" ? (
+                <>
+                  El usuario <strong>{suspendUser?.email}</strong> no podrá acceder al sistema mientras esté suspendido.
+                  Podrás reactivar su cuenta en cualquier momento.
+                </>
+              ) : (
+                <>
+                  El usuario <strong>{suspendUser?.email}</strong> volverá a tener acceso al sistema con sus permisos
+                  anteriores.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSuspendConfirm}
+              className={
+                suspendAction === "suspend" ? "bg-orange-600 hover:bg-orange-700" : "bg-green-600 hover:bg-green-700"
+              }
+            >
+              {suspendAction === "suspend" ? (
+                <>
+                  <UserX className="w-4 h-4 mr-2" />
+                  Suspender
+                </>
+              ) : (
+                <>
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Reanudar
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
