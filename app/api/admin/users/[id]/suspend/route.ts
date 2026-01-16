@@ -32,12 +32,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     // Update user suspension status using admin client
     const adminClient = getAdminClient()
-    const { error } = await adminClient.auth.admin.updateUserById(userId, {
+    const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
       ban_duration: suspended ? "876000h" : "none", // 100 years or none
     })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: 500 })
+    }
+
+    const newStatus = suspended ? "inactive" : "active"
+    const { error: profileError } = await supabase.from("profiles").update({ status: newStatus }).eq("id", userId)
+
+    if (profileError) {
+      console.error("Error updating profile status:", profileError)
+      // Don't fail the request, the auth suspension is more important
     }
 
     return NextResponse.json({
