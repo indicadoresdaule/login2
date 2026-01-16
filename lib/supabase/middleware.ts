@@ -26,9 +26,15 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
+  await supabase.auth.getUser()
+
   const accessResponse = await checkRouteAccess(request, supabase)
 
   if (accessResponse) {
+    // Copiar las cookies al response de redirección
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      accessResponse.cookies.set(cookie.name, cookie.value)
+    })
     return accessResponse
   }
 
