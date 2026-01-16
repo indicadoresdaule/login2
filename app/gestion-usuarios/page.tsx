@@ -49,6 +49,7 @@ interface UserProfile {
   id: string
   email: string
   role: UserRole
+  status: string
   created_at: string
   updated_at: string
 }
@@ -485,17 +486,26 @@ export default function GestionUsuariosPage() {
                         {user.profile ? getRoleBadge(user.profile.role) : <Badge>Sin perfil</Badge>}
                       </td>
                       <td className="px-6 py-4">
-                        {suspended ? (
-                          <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
-                            <UserX className="w-3 h-3 mr-1" />
-                            Suspendido
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                            <UserCheck className="w-3 h-3 mr-1" />
-                            Activo
-                          </Badge>
-                        )}
+                        <div className="flex flex-col gap-1">
+                          {suspended ? (
+                            <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">
+                              <UserX className="w-3 h-3 mr-1" />
+                              Suspendido
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                              <UserCheck className="w-3 h-3 mr-1" />
+                              Activo
+                            </Badge>
+                          )}
+                          {user.profile?.status && (
+                            <span className="text-xs text-secondary-text">
+                              {user.profile.status === "active" && "✓ Perfil activo"}
+                              {user.profile.status === "inactive" && "○ Perfil inactivo"}
+                              {user.profile.status === "pending" && "⏳ Pendiente"}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-secondary-text">
                         {new Date(user.created_at).toLocaleDateString("es-ES")}
@@ -518,18 +528,31 @@ export default function GestionUsuariosPage() {
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSuspend(user.id, !suspended)}
-                            disabled={user.id === currentUser?.user?.id}
-                            title={suspended ? "Reactivar usuario" : "Suspender usuario"}
-                            className={
-                              suspended ? "border-green-500/20 text-green-600" : "border-orange-500/20 text-orange-600"
-                            }
-                          >
-                            {suspended ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-                          </Button>
+                          {suspended ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSuspend(user.id, false)}
+                              disabled={user.id === currentUser?.user?.id}
+                              title="Reanudar usuario"
+                              className="border-green-500/20 text-green-600 hover:bg-green-500/10"
+                            >
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              <span className="hidden sm:inline">Reanudar</span>
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSuspend(user.id, true)}
+                              disabled={user.id === currentUser?.user?.id}
+                              title="Suspender usuario"
+                              className="border-orange-500/20 text-orange-600 hover:bg-orange-500/10"
+                            >
+                              <UserX className="w-4 h-4 mr-1" />
+                              <span className="hidden sm:inline">Suspender</span>
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -539,7 +562,7 @@ export default function GestionUsuariosPage() {
                             }}
                             disabled={user.id === currentUser?.user?.id}
                             title="Eliminar usuario"
-                            className="border-red-500/20 text-red-600"
+                            className="border-red-500/20 text-red-600 hover:bg-red-500/10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
