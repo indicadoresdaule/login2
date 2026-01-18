@@ -100,7 +100,7 @@ export default function Home() {
               <div className="card-elevated p-6 sm:p-8">
                 <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Nuestra Visión</h3>
                 <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-                  El GAD Cantón Daule se compromete con la sostenibilidad ambiental y la gestión responsable de residuos
+                  Se compromete con la sostenibilidad ambiental y la gestión responsable de residuos
                   sólidos. Esta plataforma refleja nuestro esfuerzo por transparencia, participación ciudadana y mejora
                   continua en políticas ambientales.
                 </p>
