@@ -1239,47 +1239,82 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                           {tabla.nombreGrupo}
                         </h4>
                         <div className="w-full overflow-x-visible">
-                          <Table className="w-full table-auto">
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="font-bold min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
-                                  Categoría
-                                </TableHead>
-                                <TableHead className="font-bold text-right min-w-[100px] text-xs sm:text-sm align-top">
-                                  Cantidad
-                                </TableHead>
-                                <TableHead className="font-bold text-right min-w-[120px] text-xs sm:text-sm align-top">
-                                  % del Total
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {tabla.datos.map((fila, idx2) => (
-                                <TableRow key={idx2}>
-                                  <TableCell className="font-medium min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
-                                    {fila.name}
+                          {/* Versión Desktop - Tabla tradicional */}
+                          <div className="hidden md:block">
+                            <Table className="w-full table-auto">
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="font-bold min-w-[200px] max-w-[300px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                    Categoría
+                                  </TableHead>
+                                  <TableHead className="font-bold text-right min-w-[100px] text-xs sm:text-sm align-top">
+                                    Cantidad
+                                  </TableHead>
+                                  <TableHead className="font-bold text-right min-w-[120px] text-xs sm:text-sm align-top">
+                                    % del Total
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {tabla.datos.map((fila, idx2) => (
+                                  <TableRow key={idx2}>
+                                    <TableCell className="font-medium min-w-[200px] max-w-[300px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                      {fila.name}
+                                    </TableCell>
+                                    <TableCell className="text-right min-w-[100px] text-xs sm:text-sm align-top">
+                                      {fila.value}
+                                    </TableCell>
+                                    <TableCell className="text-right min-w-[120px] text-xs sm:text-sm align-top">
+                                      {formatearPorcentaje(fila.porcentaje)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                                <TableRow className="bg-muted/50 font-bold">
+                                  <TableCell className="min-w-[200px] max-w-[300px] text-xs sm:text-sm break-words whitespace-normal align-top">
+                                    Total
                                   </TableCell>
                                   <TableCell className="text-right min-w-[100px] text-xs sm:text-sm align-top">
-                                    {fila.value}
+                                    {tabla.total}
                                   </TableCell>
                                   <TableCell className="text-right min-w-[120px] text-xs sm:text-sm align-top">
-                                    {formatearPorcentaje(fila.porcentaje)}
+                                    100%
                                   </TableCell>
                                 </TableRow>
-                              ))}
-                              <TableRow className="bg-muted/50 font-bold">
-                                <TableCell className="min-w-[150px] max-w-[250px] text-xs sm:text-sm break-words whitespace-normal align-top">
-                                  Total
-                                </TableCell>
-                                <TableCell className="text-right min-w-[100px] text-xs sm:text-sm align-top">
-                                  {tabla.total}
-                                </TableCell>
-                                <TableCell className="text-right min-w-[120px] text-xs sm:text-sm align-top">
-                                  100%
-                                </TableCell>
-                              </TableRow>
-                            </TableBody>
-                          </Table>
+                              </TableBody>
+                            </Table>
+                          </div>
+                          
+                          {/* Versión Móvil - Cards responsivas sin scroll horizontal */}
+                          <div className="md:hidden space-y-4">
+                            {tabla.datos.map((fila, idx2) => (
+                              <Card key={idx2} className="p-4 border border-border">
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center py-2 border-b">
+                                    <span className="text-sm font-medium text-foreground break-words whitespace-normal max-w-[70%]">
+                                      {fila.name}
+                                    </span>
+                                    <div className="flex flex-col items-end">
+                                      <span className="text-sm font-semibold text-foreground">
+                                        {fila.value}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatearPorcentaje(fila.porcentaje)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                            <Card className="p-4 border border-border bg-muted/50">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-bold text-foreground">Total</span>
+                                <div className="flex flex-col items-end">
+                                  <span className="text-sm font-bold text-foreground">{tabla.total}</span>
+                                  <span className="text-xs text-muted-foreground">100%</span>
+                                </div>
+                              </div>
+                            </Card>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1419,7 +1454,65 @@ function ComportamientoGraficos({ datos }: GraficosProps) {
                         </Table>
                       </div>
 
-                      <div className="lg:hidden space-y-6">
+                      {/* Versión Tablet (md:block lg:hidden) */}
+                      <div className="hidden md:block lg:hidden space-y-6">
+                        {tablasLikert.map((tabla, idx) => (
+                          <div key={idx} className="border rounded-lg p-4 bg-card mb-4">
+                            <h5 className="font-semibold text-sm mb-4 text-foreground leading-tight break-words whitespace-normal">
+                              {tabla.pregunta}
+                            </h5>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              <div className="bg-muted/30 rounded p-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Totalmente Desacuerdo</div>
+                                <div className="font-semibold text-sm">
+                                  {tabla.totalEncuestas > 0
+                                    ? formatearPorcentaje((tabla.conteos["Totalmente desacuerdo"] / tabla.totalEncuestas) * 100)
+                                    : "0%"}
+                                </div>
+                              </div>
+                              <div className="bg-muted/30 rounded p-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Desacuerdo</div>
+                                <div className="font-semibold text-sm">
+                                  {tabla.totalEncuestas > 0
+                                    ? formatearPorcentaje((tabla.conteos["Desacuerdo"] / tabla.totalEncuestas) * 100)
+                                    : "0%"}
+                                </div>
+                              </div>
+                              <div className="bg-muted/30 rounded p-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Indiferente</div>
+                                <div className="font-semibold text-sm">
+                                  {tabla.totalEncuestas > 0
+                                    ? formatearPorcentaje((tabla.conteos["Indiferente"] / tabla.totalEncuestas) * 100)
+                                    : "0%"}
+                                </div>
+                              </div>
+                              <div className="bg-muted/30 rounded p-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">De Acuerdo</div>
+                                <div className="font-semibold text-sm">
+                                  {tabla.totalEncuestas > 0
+                                    ? formatearPorcentaje((tabla.conteos["De acuerdo"] / tabla.totalEncuestas) * 100)
+                                    : "0%"}
+                                </div>
+                              </div>
+                              <div className="bg-muted/30 rounded p-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Totalmente Acuerdo</div>
+                                <div className="font-semibold text-sm">
+                                  {tabla.totalEncuestas > 0
+                                    ? formatearPorcentaje((tabla.conteos["Totalmente de acuerdo"] / tabla.totalEncuestas) * 100)
+                                    : "0%"}
+                                </div>
+                              </div>
+                              <div className="bg-primary/10 rounded p-3">
+                                <div className="text-xs font-bold text-primary mb-1">Promedio</div>
+                                <div className="font-bold text-sm">{formatearPorcentaje(tabla.promedio)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Versión Móvil (md:hidden) */}
+                      <div className="md:hidden space-y-6">
                         {tablasLikert.map((tabla, idx) => (
                           <div key={idx} className="border rounded-lg p-4 bg-card">
                             <h5 className="font-semibold text-sm mb-4 text-foreground leading-tight break-words whitespace-normal">
