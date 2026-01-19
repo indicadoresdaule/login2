@@ -53,9 +53,9 @@ export function Footer() {
             </p>
             <div className="text-xs sm:text-sm text-secondary-text space-y-2">
               <p>
-                <strong className="text-primary-text">GAD Cantón Daule</strong>
+                <strong className="text-primary-text">Cantón Daule</strong>
               </p>
-              <p>Email: info@daule.gob.ec</p>
+              <p>Email: indicadoresdaule@gmail.com</p>
               <p>Teléfono: +593-4-2000-000</p>
             </div>
           </div>
