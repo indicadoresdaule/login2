@@ -106,12 +106,24 @@ export default function Home() {
                 </p>
               </div>
               <div className="card-elevated p-6 sm:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">¿Cómo Participar?</h3>
-                <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-                  Tu participación es fundamental. Completa nuestras encuestas para ayudarnos a entender mejor las
-                  características de los desechos sólidos y el comportamiento proambiental de nuestra comunidad.
-                </p>
-              </div>
+  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
+    Donde otros ven basura, nosotros vemos semillas de cambio
+  </h3>
+  <ul className="space-y-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+    <li className="flex items-start">
+      <span className="mr-2">•</span>
+      <span>Cada hogar como una célula del organismo comunitario</span>
+    </li>
+    <li className="flex items-start">
+      <span className="mr-2">•</span>
+      <span>Los residuos como nutrientes que alimentan nuevos ciclos</span>
+    </li>
+    <li className="flex items-start">
+      <span className="mr-2">•</span>
+      <span>La colaboración como fotosíntesis social</span>
+    </li>
+  </ul>
+</div>
             </div>
           </div>
         </section>
