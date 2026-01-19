@@ -86,7 +86,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Sección Informativa Profesional */}
+        {/* Sección Informativa Profesional - CORREGIDA */}
         <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-secondary-bg border-y border-border">
           <div className="container-safe">
             <span className="inline-block px-3 py-1 rounded-full bg-primary-lighter text-primary font-medium text-xs mb-6">
@@ -105,15 +105,14 @@ export default function Home() {
                   continua en políticas ambientales.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-    <div className="card-elevated p-6 sm:p-8">
-      <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Economía Circular Aplicada</h3>
-              <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-      Implementamos principios de economía circular que transforman externalidades negativas en capital ambiental y social. 
-      Nuestro enfoque integra análisis de ciclo de vida, diseño regenerativo y cadenas de valor cerradas, 
-      convirtiendo desafíos de gestión en oportunidades de desarrollo comunitario autosostenible.
-              </p>
-              </div>
+              
+              <div className="card-elevated p-6 sm:p-8">
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Economía Circular Aplicada</h3>
+                <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
+                  Implementamos principios de economía circular que transforman externalidades negativas en capital ambiental y social. 
+                  Nuestro enfoque integra análisis de ciclo de vida, diseño regenerativo y cadenas de valor cerradas, 
+                  convirtiendo desafíos de gestión en oportunidades de desarrollo comunitario autosostenible.
+                </p>
               </div>
             </div>
           </div>
