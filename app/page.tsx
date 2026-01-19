@@ -22,8 +22,8 @@ export default function Home() {
                 Residuos Sólidos del Cantón Daule
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-white/90 mb-4 text-balance leading-relaxed">
-                Accede a información transparente y datos actualizados sobre la gestión de residuos sólidos. Participa
-                en encuestas, consulta indicadores y conoce nuestros avances ambientales.
+                Accede a información transparente y datos actualizados sobre la gestión de residuos sólidos. 
+                Consulta indicadores y conoce nuestras metas ambientales.
               </p>
             </div>
           </div>
@@ -40,8 +40,8 @@ export default function Home() {
                 Explora nuestras secciones
               </h2>
               <p className="text-foreground/60 max-w-2xl text-base sm:text-lg">
-                Accede a información detallada, indicadores ambientales, reportes técnicos y participa en nuestras
-                encuestas.
+                Accede a información detallada sobre nuestras metas ambientales y consulta indicadores 
+                actualizados de gestión de residuos.
               </p>
             </div>
 
@@ -55,7 +55,7 @@ export default function Home() {
               <CardNavegacion
                 href="/indicadores"
                 titulo="Indicadores"
-                descripcion="Datos en tiempo real y gráficos analíticos sobre caracterización de desechos y comportamiento sostenible."
+                descripcion="Datos actualizados y gráficos analíticos sobre caracterización de desechos y comportamiento sostenible."
                 color="accent"
               />
               <CardNavegacion
@@ -63,24 +63,28 @@ export default function Home() {
                 titulo="Avances"
                 descripcion="Seguimiento del progreso y resultados en la implementación de nuestros programas ambientales."
                 color="accent2"
+                deshabilitado={true}
               />
               <CardNavegacion
                 href="/reportes"
                 titulo="Reportes"
                 descripcion="Documentos técnicos, estudios detallados y reportes completos sobre residuos sólidos del cantón."
                 color="accent4"
+                deshabilitado={true}
               />
               <CardNavegacion
                 href="/formularios"
                 titulo="Formularios"
                 descripcion="Participa directamente en nuestras encuestas y aporta datos valiosos para mejorar políticas."
                 color="accent3"
+                deshabilitado={true}
               />
               <CardNavegacion
                 href="/integrantes"
                 titulo="Nuestro Equipo"
                 descripcion="Conoce a los integrantes responsables de la gestión ambiental en el cantón Daule."
                 color="primary"
+                deshabilitado={true}
               />
             </div>
           </div>
@@ -107,7 +111,7 @@ export default function Home() {
               </div>
               
               <div className="card-elevated p-6 sm:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Transformación Circular Integral</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Economía Circular Aplicada</h3>
                 <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
                   Implementamos principios de economía circular que transforman externalidades negativas en capital ambiental y social. 
                   Nuestro enfoque integra análisis de ciclo de vida, diseño regenerativo y cadenas de valor cerradas, 
