@@ -107,7 +107,7 @@ export default function Home() {
               </div>
               
               <div className="card-elevated p-6 sm:p-8">
-                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Economía Circular Aplicada</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Transformación Circular Integral</h3>
                 <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
                   Implementamos principios de economía circular que transforman externalidades negativas en capital ambiental y social. 
                   Nuestro enfoque integra análisis de ciclo de vida, diseño regenerativo y cadenas de valor cerradas, 
