@@ -105,25 +105,16 @@ export default function Home() {
                   continua en políticas ambientales.
                 </p>
               </div>
-              <div className="card-elevated p-6 sm:p-8">
-  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
-    Donde otros ven basura, nosotros vemos semillas de cambio
-  </h3>
-  <ul className="space-y-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
-    <li className="flex items-start">
-      <span className="mr-2">•</span>
-      <span>Cada hogar como una célula del organismo comunitario</span>
-    </li>
-    <li className="flex items-start">
-      <span className="mr-2">•</span>
-      <span>Los residuos como nutrientes que alimentan nuevos ciclos</span>
-    </li>
-    <li className="flex items-start">
-      <span className="mr-2">•</span>
-      <span>La colaboración como fotosíntesis social</span>
-    </li>
-  </ul>
-</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+    <div className="card-elevated p-6 sm:p-8">
+      <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">Economía Circular Aplicada</h3>
+              <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
+      Implementamos principios de economía circular que transforman externalidades negativas en capital ambiental y social. 
+      Nuestro enfoque integra análisis de ciclo de vida, diseño regenerativo y cadenas de valor cerradas, 
+      convirtiendo desafíos de gestión en oportunidades de desarrollo comunitario autosostenible.
+              </p>
+              </div>
+              </div>
             </div>
           </div>
         </section>
